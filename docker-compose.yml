@@ -16,7 +16,7 @@ services:
       EULA: "TRUE"
 
       # --- Server type & version ---
-      TYPE: "PAPER"           # VANILLA, PAPER, FORGE, FABRIC
+      TYPE: "FABRIC"           # VANILLA, PAPER, FORGE, FABRIC
       VERSION: "26.2"
 
       # --- Performance ---
@@ -67,15 +67,25 @@ services:
       RCON_PORT: "25575"
       RCON_PASSWORD: "${RCON_PASSWORD}"  # Set in .env (chmod 600)
 
-      # --- Backups (requires companion container below) ---
-      # See backup service below
-
       # --- Misc ---
       ALLOW_NETHER: "true"
       SPAWN_ANIMALS: "true"
       SPAWN_MONSTERS: "true"
       SPAWN_NPCS: "true"      # Villagers
       SNOOPER_ENABLED: "false" # Disable Mojang telemetry
+
+      # --- Mods ---
+      MODRINTH_PROJECTS: |
+        fabric-api
+        yacl
+        lithium
+        krypton
+        ferrite-core
+        jade
+        appleskin
+        rightclickharvest
+        easy-shulker-boxes
+      MODRINTH_DOWNLOAD_DEPENDENCIES: "required"
 
   # --- Optional: automatic backups ---
   backup:
