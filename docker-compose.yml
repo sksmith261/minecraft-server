@@ -1,0 +1,95 @@
+services:
+  minecraft:
+    image: itzg/minecraft-server
+    container_name: minecraft
+    ports:
+      - "25565:25565"
+      - "127.0.0.1:25575:25575"   # RCON: loopback only, never expose to the internet
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+    tty: true
+    stdin_open: true
+
+    environment:
+      # --- Required ---
+      EULA: "TRUE"
+
+      # --- Server type & version ---
+      TYPE: "PAPER"           # VANILLA, PAPER, FORGE, FABRIC
+      VERSION: "26.2"
+
+      # --- Performance ---
+      MEMORY: "2G"            # RAM allocated to JVM (leave 1-2G free for OS)
+      JVM_XX_OPTS: "-XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200"
+
+      # --- Identity ---
+      MOTD: "${MOTD:-A Minecraft Server}"   # Message shown in server list — set in .env
+      ICON: ""                # URL to a 64x64 PNG for the server list icon
+
+      # --- Gameplay ---
+      MODE: "survival"        # survival, creative, adventure, spectator
+      DIFFICULTY: "normal"      # peaceful, easy, normal, hard
+      HARDCORE: "false"
+      PVP: "false"
+      ALLOW_FLIGHT: "false"   # Set true if using mods/plugins that add flight
+      FORCE_GAMEMODE: "false" # Force players back to MODE on join
+
+      # --- World ---
+      LEVEL: "world2"          # Folder name for the world
+      LEVEL_TYPE: "DEFAULT"   # DEFAULT, FLAT, LARGEBIOMES, AMPLIFIED, SINGLE_BIOME
+      SEED: "${SEED:-}"       # Set in .env — leave blank for random
+      GENERATE_STRUCTURES: "true"
+      MAX_WORLD_SIZE: "29999984"
+      VIEW_DISTANCE: "10"     # Chunks rendered server-side (lower = less RAM/CPU)
+      SIMULATION_DISTANCE: "10"
+
+      # --- Players ---
+      MAX_PLAYERS: "20"
+      ONLINE_MODE: "true"     # false = cracked/offline mode (no Mojang auth)
+      ENFORCE_WHITELIST: "true"
+      WHITELIST: "${WHITELIST:-}"  # Set in .env — "player1,player2", requires ENFORCE_WHITELIST true
+      OPS: "${OPS:-}"              # Set in .env — server operators (admin)
+      SPAWN_PROTECTION: "16"  # Radius around spawn only ops can build (0 = disabled)
+
+      # --- Chat ---
+      ENABLE_COMMAND_BLOCK: "false"
+      MAX_TICK_TIME: "60000"  # ms before server watchdog kills it (60s default)
+      PLAYER_IDLE_TIMEOUT: "0" # Minutes before AFK players are kicked (0 = disabled)
+
+      # --- Network ---
+      NETWORK_COMPRESSION_THRESHOLD: "256" # Bytes before packets are compressed
+      MAX_TICK_LATENCY: "-1"  # -1 = disabled
+      RATE_LIMIT: "0"         # Packets/s per player (0 = unlimited)
+
+      # --- RCON (remote console) ---
+      ENABLE_RCON: "true"
+      RCON_PORT: "25575"
+      RCON_PASSWORD: "${RCON_PASSWORD}"  # Set in .env (chmod 600)
+
+      # --- Backups (requires companion container below) ---
+      # See backup service below
+
+      # --- Misc ---
+      ALLOW_NETHER: "true"
+      SPAWN_ANIMALS: "true"
+      SPAWN_MONSTERS: "true"
+      SPAWN_NPCS: "true"      # Villagers
+      SNOOPER_ENABLED: "false" # Disable Mojang telemetry
+
+  # --- Optional: automatic backups ---
+  backup:
+    image: itzg/mc-backup
+    container_name: minecraft-backup
+    environment:
+      BACKUP_INTERVAL: "24h"
+      RCON_HOST: minecraft
+      RCON_PASSWORD: "${RCON_PASSWORD}"  # Must match above — set in .env
+      DEST_DIR: /backups
+      PRUNE_BACKUPS_DAYS: "7"     # Keep 7 days of backups
+    volumes:
+      - ./data:/data:ro
+      - ./backups:/backups
+    depends_on:
+      - minecraft
+    restart: unless-stopped
