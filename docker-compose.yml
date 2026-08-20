@@ -85,6 +85,8 @@ services:
         appleskin
         rightclickharvest
         easy-shulker-boxes
+        improved-signs
+        leaves-be-gone
       MODRINTH_DOWNLOAD_DEPENDENCIES: "required"
 
   # --- Optional: automatic backups ---
